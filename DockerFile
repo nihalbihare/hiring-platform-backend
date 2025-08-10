@@ -4,4 +4,4 @@ RUN mvn clean package -DskipTests
 FROM openjdk:17.0.1-jdk-slim
 COPY --from=build /target/Hiring-Platform-0.0.1-SNAPSHOT.jar Hiring-Platform.jar
 EXPOSE 8080
-ENTRYPOINT [ "java","-jar","Hiring-Platform.jar"]
+ENTRYPOINT [ "java","-jar","Hiring-Platform.jar"] 
