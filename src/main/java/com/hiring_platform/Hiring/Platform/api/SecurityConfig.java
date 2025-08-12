@@ -23,10 +23,10 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/auth/**").permitAll() // Public endpoints (login/signup)
                 .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll() // Allow preflight
-                .anyRequest().authenticated() // All other endpoints need JWT
-            )
+                .anyRequest().authenticated());// All other endpoints need JWT
+          
             // You will also have your JWT filter configured here
-            .oauth2ResourceServer(oauth2 -> oauth2.jwt()); // Or your JWT filter setup
+    
 
         return http.build();
     }
