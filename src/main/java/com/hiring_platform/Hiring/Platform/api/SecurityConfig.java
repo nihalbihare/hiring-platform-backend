@@ -2,6 +2,7 @@ package com.hiring_platform.Hiring.Platform.api;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -18,15 +19,12 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .cors(cors -> cors.configurationSource(corsConfigurationSource)) // ✅ Use your CorsConfig
-            .csrf(csrf -> csrf.disable()) // Disable CSRF for APIs
+            .cors(cors -> cors.configurationSource(corsConfigurationSource)) // ✅ Apply your CorsConfig
+            .csrf(csrf -> csrf.disable()) // Not needed for API calls
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/auth/**").permitAll() // Public endpoints (login/signup)
-                .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll() // Allow preflight
-                .anyRequest().authenticated());// All other endpoints need JWT
-          
-            // You will also have your JWT filter configured here
-    
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // ✅ Allow preflight
+                .anyRequest().authenticated()
+            );
 
         return http.build();
     }
