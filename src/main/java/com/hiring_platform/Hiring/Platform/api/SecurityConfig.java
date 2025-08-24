@@ -16,16 +16,18 @@ public class SecurityConfig {
         this.corsConfigurationSource = corsConfigurationSource;
     }
 
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-            .cors(cors -> cors.configurationSource(corsConfigurationSource)) // ✅ Apply your CorsConfig
-            .csrf(csrf -> csrf.disable()) // Not needed for API calls
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // ✅ Allow preflight
-                .anyRequest().authenticated()
-            );
+@Bean
+public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    http
+        .cors(cors -> cors.configurationSource(corsConfigurationSource)) 
+        .csrf(csrf -> csrf.disable()) 
+        .authorizeHttpRequests(auth -> auth
+            .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // Preflight
+            .requestMatchers("/auth/login", "/auth/register").permitAll() // ✅ Allow login & signup without JWT
+            .anyRequest().authenticated() // All others need JWT
+        );
 
-        return http.build();
-    }
+    return http.build();
+}
+
 }
