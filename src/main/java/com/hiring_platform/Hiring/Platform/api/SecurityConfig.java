@@ -23,11 +23,15 @@ public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Excepti
         .csrf(csrf -> csrf.disable()) 
         .authorizeHttpRequests(auth -> auth
             .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // Preflight
-            .requestMatchers("/auth/login", "/auth/register").permitAll() // ✅ Allow login & signup without JWT
-            .anyRequest().authenticated() // All others need JWT
+            .requestMatchers("/auth/login", "/auth/register").permitAll()
+            .requestMatchers("/users/register").permitAll()  // ✅ allow signup
+            // if you want to allow OTP routes too:
+            .requestMatchers("/users/sendOtp/**", "/users/verifyOtp/**", "/users/changePass").permitAll()
+            .anyRequest().authenticated()
         );
 
     return http.build();
 }
+
 
 }
