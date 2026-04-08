@@ -29,7 +29,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-@Service(value = "userService")
+@Service(value = "userService ")
 @Validated
 public class UserServiceImpli implements UserService {
     @Autowired
