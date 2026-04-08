@@ -69,20 +69,53 @@ public class UserServiceImpli implements UserService {
 
 
     @Override
-    public Boolean sendOtp(String email) throws  Exception {
-        User user =  userRepository.findByEmail(email).orElseThrow(() ->
-                new JobPortalException("USER_NOT_FOUND"));
-        MimeMessage mm = mailSender.createMimeMessage();
-        MimeMessageHelper messageHelper = new MimeMessageHelper(mm,true);
-        messageHelper.setTo(email);
-        messageHelper.setSubject("Your otp code");
-        String genOtp = Utilities.OtpGeneration();
-        Otp otp = new Otp(email ,genOtp, LocalDateTime.now());
-        otpRepository.save(otp);
-        messageHelper.setText(Data.getMessageBody(genOtp, user.getName()), true);
-        mailSender.send(mm);
-        return true;
+  public Boolean sendOtp(String email) throws Exception {
+
+    // 🔍 Step 1: Check user exists
+    User user = userRepository.findByEmail(email)
+            .orElseThrow(() -> new JobPortalException("USER_NOT_FOUND"));
+
+    // 🔢 Step 2: Generate OTP
+    String genOtp = Utilities.OtpGeneration();
+
+    // 💾 Step 3: Save OTP in DB
+    Otp otp = new Otp(email, genOtp, LocalDateTime.now());
+    otpRepository.save(otp);
+
+    // 🌐 Step 4: Prepare API call
+    RestTemplate restTemplate = new RestTemplate();
+
+    HttpHeaders headers = new HttpHeaders();
+    headers.set("api-key", System.getenv("BREVO_API_KEY")); // ✅ secure
+    headers.setContentType(MediaType.APPLICATION_JSON);
+
+    // 📩 Step 5: Email body (simple & safe)
+    String body = "{"
+            + "\"sender\": {\"email\": \"nihalbihare2@gmail.com\"},"
+            + "\"to\": [{\"email\": \"" + email + "\"}],"
+            + "\"subject\": \"OTP Verification\","
+            + "\"textContent\": \"Your OTP is: " + genOtp + "\""
+            + "}";
+
+    HttpEntity<String> request = new HttpEntity<>(body, headers);
+
+    try {
+        // 🚀 Step 6: Send email via Brevo API
+        ResponseEntity<String> response = restTemplate.postForEntity(
+                "https://api.brevo.com/v3/smtp/email",
+                request,
+                String.class
+        );
+
+        System.out.println("Email sent successfully: " + response.getBody());
+
+    } catch (Exception e) {
+        e.printStackTrace();
+        throw new Exception("Failed to send OTP email: " + e.getMessage());
     }
+
+    return true;
+}
 
 
     @Override
