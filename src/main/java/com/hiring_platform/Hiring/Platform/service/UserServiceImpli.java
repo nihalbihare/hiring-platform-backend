@@ -29,7 +29,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-@Service(value = "userService ")
+@Service(value = "userService")
 @Validated
 public class UserServiceImpli implements UserService {
     @Autowired
@@ -72,8 +72,8 @@ public class UserServiceImpli implements UserService {
 
 
 
-    @Override
-  public Boolean sendOtp(String email) throws Exception {
+   @Override
+public Boolean sendOtp(String email) throws Exception {
 
     // 🔍 Step 1: Check user exists
     User user = userRepository.findByEmail(email)
@@ -89,21 +89,29 @@ public class UserServiceImpli implements UserService {
     // 🌐 Step 4: Prepare API call
     RestTemplate restTemplate = new RestTemplate();
 
+    String apiKey = System.getenv("BREVO_API_KEY");
+    String senderEmail = System.getenv("BREVO_SENDER_EMAIL");
+
+    if (apiKey == null || senderEmail == null) {
+        throw new RuntimeException("Email configuration missing in ENV");
+    }
+
     HttpHeaders headers = new HttpHeaders();
-    headers.set("api-key", System.getenv("BREVO_API_KEY")); // ✅ secure
+    headers.set("api-key", apiKey);
     headers.setContentType(MediaType.APPLICATION_JSON);
 
-    // 📩 Step 5: Email body (simple & safe)
-   String senderEmail = System.getenv("BREVO_SENDER_EMAIL");
+    // ✅ Step 5: Use HTML template (your designed email)
+    String htmlContent = Data.getMessageBody(genOtp, user.getName());
 
-String body = "{"
-        + "\"sender\": {\"email\": \"" + senderEmail + "\"},"
-        + "\"to\": [{\"email\": \"" + email + "\"}],"
-        + "\"subject\": \"OTP Verification\","
-        + "\"textContent\": \"Your OTP is: " + genOtp + "\""
-        + "}";
+    // 🔥 BEST PRACTICE: Use Map instead of string JSON
+    Map<String, Object> payload = new HashMap<>();
 
-    HttpEntity<String> request = new HttpEntity<>(body, headers);
+    payload.put("sender", Map.of("email", senderEmail));
+    payload.put("to", List.of(Map.of("email", email)));
+    payload.put("subject", "OTP Verification");
+    payload.put("htmlContent", htmlContent);
+
+    HttpEntity<Map<String, Object>> request = new HttpEntity<>(payload, headers);
 
     try {
         // 🚀 Step 6: Send email via Brevo API
