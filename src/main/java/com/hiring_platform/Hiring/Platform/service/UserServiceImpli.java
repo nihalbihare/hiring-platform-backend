@@ -90,12 +90,14 @@ public class UserServiceImpli implements UserService {
     headers.setContentType(MediaType.APPLICATION_JSON);
 
     // 📩 Step 5: Email body (simple & safe)
-    String body = "{"
-            + "\"sender\": {\"email\": \"nihalbihare2@gmail.com\"},"
-            + "\"to\": [{\"email\": \"" + email + "\"}],"
-            + "\"subject\": \"OTP Verification\","
-            + "\"textContent\": \"Your OTP is: " + genOtp + "\""
-            + "}";
+   String senderEmail = System.getenv("BREVO_SENDER_EMAIL");
+
+String body = "{"
+        + "\"sender\": {\"email\": \"" + senderEmail + "\"},"
+        + "\"to\": [{\"email\": \"" + email + "\"}],"
+        + "\"subject\": \"OTP Verification\","
+        + "\"textContent\": \"Your OTP is: " + genOtp + "\""
+        + "}";
 
     HttpEntity<String> request = new HttpEntity<>(body, headers);
 
