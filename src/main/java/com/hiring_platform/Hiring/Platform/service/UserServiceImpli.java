@@ -73,75 +73,56 @@ public class UserServiceImpli implements UserService {
 
 
     @Override
-public Boolean sendOtp(String email) throws Exception {
-
-    System.out.println("=== DEBUG START ===");
+  public Boolean sendOtp(String email) throws Exception {
 
     // 🔍 Step 1: Check user exists
     User user = userRepository.findByEmail(email)
             .orElseThrow(() -> new JobPortalException("USER_NOT_FOUND"));
-    System.out.println("User found: " + user.getEmail());
 
     // 🔢 Step 2: Generate OTP
     String genOtp = Utilities.OtpGeneration();
-    System.out.println("Generated OTP: " + genOtp);
 
     // 💾 Step 3: Save OTP in DB
     Otp otp = new Otp(email, genOtp, LocalDateTime.now());
     otpRepository.save(otp);
-    System.out.println("OTP saved in DB");
 
     // 🌐 Step 4: Prepare API call
     RestTemplate restTemplate = new RestTemplate();
 
-    String apiKey = System.getenv("BREVO_API_KEY");
-    String senderEmail = System.getenv("BREVO_SENDER_EMAIL");
-
-    // 🔍 DEBUG ENV VALUES
-    System.out.println("API KEY: " + apiKey);
-    System.out.println("SENDER EMAIL: " + senderEmail);
-
-    if (apiKey == null || senderEmail == null) {
-        throw new RuntimeException("ENV variables not loaded properly");
-    }
-
     HttpHeaders headers = new HttpHeaders();
-    headers.set("api-key", apiKey);
+    headers.set("api-key", System.getenv("BREVO_API_KEY")); // ✅ secure
     headers.setContentType(MediaType.APPLICATION_JSON);
 
-    String body = "{"
-            + "\"sender\": {\"email\": \"" + senderEmail + "\"},"
-            + "\"to\": [{\"email\": \"" + email + "\"}],"
-            + "\"subject\": \"OTP Verification\","
-            + "\"textContent\": \"Your OTP is: " + genOtp + "\""
-            + "}";
+    // 📩 Step 5: Email body (simple & safe)
+   String senderEmail = System.getenv("BREVO_SENDER_EMAIL");
 
-    System.out.println("Request Body: " + body);
+String body = "{"
+        + "\"sender\": {\"email\": \"" + senderEmail + "\"},"
+        + "\"to\": [{\"email\": \"" + email + "\"}],"
+        + "\"subject\": \"OTP Verification\","
+        + "\"textContent\": \"Your OTP is: " + genOtp + "\""
+        + "}";
 
     HttpEntity<String> request = new HttpEntity<>(body, headers);
 
     try {
-        System.out.println("Sending request to Brevo...");
-
+        // 🚀 Step 6: Send email via Brevo API
         ResponseEntity<String> response = restTemplate.postForEntity(
                 "https://api.brevo.com/v3/smtp/email",
                 request,
                 String.class
         );
 
-        System.out.println("Response Status: " + response.getStatusCode());
-        System.out.println("Response Body: " + response.getBody());
+        System.out.println("Email sent successfully: " + response.getBody());
 
     } catch (Exception e) {
-        System.out.println("=== ERROR OCCURRED ===");
         e.printStackTrace();
         throw new Exception("Failed to send OTP email: " + e.getMessage());
     }
 
-    System.out.println("=== DEBUG END ===");
-
     return true;
 }
+
 
     @Override
     public Boolean verifyOtp(String email, String otp) throws JobPortalException {
